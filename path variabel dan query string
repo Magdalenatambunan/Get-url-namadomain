@@ -1,0 +1,63 @@
+// url parameter dan query string parameter
+//contoh  ada sebuah url localhost:8080/books/judul_buku_satu, maka nanti halaman web 
+//menampilkan detail dari buku yang judulnya adalah judul buku satu
+// ini disebut dengan url parameter MENGGUNAKAN function param
+//cara nya adalah sebagai berikut
+//localhost:8080/books/11/gundam 
+
+
+
+package main
+
+import (
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+)
+
+func main() {
+	// Membuat router default dengan Gin
+	router := gin.Default()
+
+	router.GET("/", rootHandler)
+
+	router.GET("/hello", helloHandler)
+
+	router.GET("/books/:id/:title", booksHandler)
+
+	router.GET("/query", queryHandler) //  query string parameter
+
+
+	router.Run(":8080")
+}
+
+func rootHandler(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"name": "Magdalena Tambunan",
+		"bio":  "mahasiswi del",
+	})
+}
+
+func helloHandler(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"title": "Magdalena Tambunan",
+		"bio":   "mahasiswi del",
+	})
+}
+
+func booksHandler(c *gin.Context) {
+	id := c.Param("id")                                    // Mengambil parameter URL "id"
+	title := c.Param("title")                              // Mengambil parameter URL "title"
+	c.JSON(http.StatusOK, gin.H{"id": id, "title": title}) // Mengembalikan JSON dengan id dan title
+}
+
+func queryHandler(c *gin.Context) {
+	title := c.Query("title")
+	price := c.Query("price")                                    // Mengambil parameter query "title"
+	c.JSON(http.StatusOK, gin.H{"title": title, "price": price}) // Mengembalikan JSON dengan title
+}
+
+
+//  query string parameter
+// localhost:8080/query?title=manusia dan bumi
+// localhost:8080/query?price=40&title=hey magda
