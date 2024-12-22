@@ -1,0 +1,33 @@
+package main
+
+import (
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+)
+
+func main() {
+	// Membuat router default dengan Gin
+	router := gin.Default()
+
+	// Definisikan route GET untuk "/"
+	router.GET("/", func(c *gin.Context) {  
+// get ini berfungsi sebagai url root, sebagai contoh localhost:8080/ maka hasilnya akan mengembalikan isi json
+		c.JSON(http.StatusOK, gin.H{
+			"name": "Magdalena",
+			"bio":  "mahasiswi Del",
+		})
+	})
+
+	router.GET("/hello", func(c *gin.Context) {
+// fungsi router get ini yaitu ketika kita akses localhost:8080/hello maka akan muncul data json dibawha ini
+		c.JSON(http.StatusOK, gin.H{
+			"content": "hello magdalena",
+			"bio":     "mahasiswi Del",
+		})
+	})
+
+	// Menjalankan server di port 8080
+	router.Run(":8080")
+}
+
