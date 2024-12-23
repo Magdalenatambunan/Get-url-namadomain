@@ -1,0 +1,112 @@
+// http://localhost:8000/v1/
+// menambah POST http://localhost:8000/v1/books
+{
+  "title": "Book Title",
+  "description": "Book Description",
+  "price": 100000,
+  "rating": 5
+}
+
+// melihat semua  buku http://localhost:8000/v1/books
+// melihat buku berdasarkan ID http://localhost:8000/v1/books/1
+// MEMPERBahrui buku PUT http://localhost:8000/v1/books/1
+{
+  "title": "Updated Title",
+  "description": "Updated Description",
+  "price": 120000,
+  "rating": 4
+}
+
+//MENGAPUS BUKU DEL, http://localhost:8000/v1/books/1
+
+
+
+
+
+
+
+package main
+
+import (
+	"fmt"
+	"log"
+	"magdalena-API/book"
+	"magdalena-API/handler"
+
+	"github.com/gin-gonic/gin"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+)
+
+func main() {
+	// Ganti dengan informasi koneksi yang sesuai
+	dsn := "root:@tcp(127.0.0.1:3306)/magdalena-API?charset=utf8mb4&parseTime=True&loc=Local"
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	if err != nil {
+		log.Fatal("Db connection error:", err)
+	}
+
+	// Auto migrate untuk model Book
+	if err := db.AutoMigrate(&book.Book{}); err != nil {
+		log.Fatal("Auto migration error:", err)
+	}
+
+	// Membuat book baru
+	newBook := book.Book{
+		Title:       "Bumi dan Manusia",
+		Price:       120000,
+		Rating:      8,
+		Description: "Ini adalah buku yang bagus untuk cerita",
+	}
+
+	if err := db.Debug().Create(&newBook).Error; err != nil {
+		log.Println("Error creating book record:", err)
+	} else {
+		fmt.Println("Book created successfully:")
+		fmt.Printf("Title: %s\n", newBook.Title)
+	}
+
+	// Membuat router default dengan Gin
+	router := gin.Default()
+	v1 := router.Group("/v1")
+
+	// Daftarkan endpoint
+	v1.GET("/", handler.RootHandler)
+	v1.GET("/hello", handler.HelloHandler)
+	v1.GET("/books/:id/:title", handler.BookHandler)
+	v1.GET("/query", handler.QueryHandler)
+	v1.GET("/books", handler.PostBooksHandler)
+
+	// Endpoint untuk mengupdate buku
+	v1.PUT("/books/:id", func(c *gin.Context) {
+		var updatedBook book.Book
+		id := c.Param("id")
+
+		// Ambil data buku yang ingin diperbarui
+		if err := db.First(&updatedBook, id).Error; err != nil {
+			c.JSON(404, gin.H{"error": "Book not found"})
+			return
+		}
+
+		// Bind data dari request body ke struct updatedBook
+		if err := c.ShouldBindJSON(&updatedBook); err != nil {
+			c.JSON(400, gin.H{"error": err.Error()})
+			return
+		}
+
+		// Perbarui data buku
+		if err := db.Save(&updatedBook).Error; err != nil {
+			c.JSON(500, gin.H{"error": "Failed to update book"})
+			return
+		}
+
+		c.JSON(200, updatedBook)
+	})
+
+	// Menjalankan server
+	if err := router.Run(":8000"); err != nil {
+		log.Fatal("Server run error:", err)
+	}
+}
+
+
